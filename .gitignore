@@ -1,0 +1,7 @@
+**.sqlite3
+
+app/build
+app/*.sqlite3
+__pycache__/
+api/__pycache__/
+home/__pycache__/
