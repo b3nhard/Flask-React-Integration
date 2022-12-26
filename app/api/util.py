@@ -9,7 +9,6 @@ from datetime import datetime,timedelta
 
 
 
-
 def hash_pass(password):
     """Hash a password for storing."""
 

@@ -1,6 +1,6 @@
 **.sqlite3
 
-app/build
+
 app/*.sqlite3
 __pycache__/
 api/__pycache__/

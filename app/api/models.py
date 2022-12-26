@@ -55,7 +55,7 @@ class Posts(db.Model):
             "title":self.title,
             "content":self.content,
             "author_id":self.author_id,
-            "create_at":self.created_at
+            "created_at":self.created_at
         }
     def create(self):
         db.session.add(self)

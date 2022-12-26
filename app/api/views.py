@@ -9,35 +9,42 @@ from app.api.util import createJWT,verifyJWT,verify_pass,auth_required
 
 @api.route("/login",methods=['POST'])
 def login():
-    print("Logging In")
     data = request.get_json(force=True)
-    try:
-        email = data["email"]
-        password = data["password"]
-        user = Users.query.filter_by(email=email).first_or_404()
-        ok = verify_pass(password, user.password)
-        if ok:
-            token = createJWT({"id":2,"admin":True})
-            return jsonify({"access_token":token})
-        else:
-            return Response(status=401)
-    except Exception:
-        return Response(status=401)
+    data_keys = data.keys()
+    error = ""
+    if "email" not in data_keys:
+        error = "Email is required"
+    elif "password" not in data_keys:
+        error = "Password is required"
+    
+    if error !="":
+        return  jsonify({"msg":error}),400
+    
+    email = data["email"]
+    password = data["password"]
+
+    user = Users.query.filter_by(email=email).first()
+    print("USER: ",user)
+    if user is None:
+        return jsonify({"msg":"Wrong Credentials"}),400
+    ok = verify_pass(password, user.password)
+    if ok:
+        token = createJWT({"id":2,"admin":True})
+        return jsonify({"access_token":token})
+    else:
+        return jsonify({"msg":"Wrong Credentials"}),400
+    
 
 
 
 @api.get("/user")
 @auth_required
 def getUser():
-    print("Request User: ",request.user['id'])
-    try:
-        user = Users.query.filter_by(id=request.user['id']).first_or_404()
-        res = Users.serialize(user)
-        posts = Posts.query.filter_by(author_id = request.user['id']).all()
-        res["posts"] = [Posts.serialize(post) for post in posts]
-        return jsonify(res)
-    except Exception:
-        return Response(status=404)
+    user = Users.query.filter_by(id=request.user['id']).first_or_404()
+    res = Users.serialize(user)
+    posts = Posts.query.filter_by(author_id = request.user['id']).all()
+    res["posts"] = [Posts.serialize(post) for post in posts]
+    return jsonify(res)
 
 
 
@@ -54,23 +61,20 @@ def register():
         error = "Password is required"
     
     if error !="":
-        return  jsonify({"msg":error})
+        return  jsonify({"msg":error}),400
+    
+    name = data["name"]
+    email = data["email"]
+    password = data["password"]
+
+    user = Users.query.filter_by(email=email).first()
+    print("User Found: ",user)
+    if user is None:
+        u = Users(name=name,email=email,password=password).create()
+        return jsonify(Users.serialize(u))
     else:
-        try:
-            name = data["name"]
-            email = data["email"]
-            password = data["password"]
-            user = Users.query.filter_by(email=email).first()
-            print("User Found: ",user)
-            if user is None:
-                u = Users(name=name,email=email,password=password).create()
-                return jsonify(Users.serialize(u))
-            else:
-                return jsonify({"msg":"User Already Exists"}),400
-            
-            
-        except Exception:
-            return jsonify({"msg":"Invalid request body"}), 400
+        return jsonify({"msg":"User Already Exists"}),400
+
     
 @api.get("/")
 @auth_required
